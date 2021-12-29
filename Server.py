@@ -56,7 +56,7 @@ server_tcp_socket.bind((server_ip, 0))
 server_tcp_socket.listen(1)
 
 broadcast_address = '172.1.255.255'
-broadcast_port = 13115
+broadcast_port = 13117
 
 magic_cookie = 0xabcddcba
 message_type = 0x2
