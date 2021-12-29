@@ -51,7 +51,7 @@ def get_from_server(client_tcp_socket):
 
 def start():
         client_udp_socket = socket(AF_INET, SOCK_DGRAM)
-        client_udp_socket.bind((client_ip, 13115))
+        client_udp_socket.bind((client_ip, 13117))
         client_udp_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
         client_udp_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         client_udp_socket.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
