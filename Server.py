@@ -243,9 +243,10 @@ def start_game():
     client1_threadGame.start()
     client2_threadGame.start()
     
-    client1_threadGame.join()
-    client2_threadGame.join()
+    # client1_threadGame.join()
+    # client2_threadGame.join()
 
+    time.sleep(game_time)
 
     end_message =  """
            _____       ___       ___  ___   _____  
@@ -262,7 +263,7 @@ def start_game():
           \_____/ |___/     |_____| |_|  \_\
           """
 
-    end_message += "The correct answer was " + result + "!\n"
+    end_message += "The correct answer was " + str(result) + "!\n"
     
 
 
@@ -283,7 +284,6 @@ def start_game():
     except Exception:
         print("exception")
  
-    # time.sleep(game_time)
 
 
     client1_conn.close()
