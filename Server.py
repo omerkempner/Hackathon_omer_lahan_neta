@@ -61,7 +61,6 @@ broadcast_port = 13117
 magic_cookie = 0xabcddcba
 message_type = 0x2
 server_tcp_port = server_tcp_socket.getsockname()[1]
-print("server tcp port " + str(server_tcp_port))
 
 def create_random_equation():
     operator_list = ["+", "-"]
@@ -84,7 +83,8 @@ def create_random_equation():
     meesage_q += eq
     meesage_q += "?\n\n"
     
-    result =sum
+    global result
+    result = sum
 
     return meesage_q
 
@@ -92,11 +92,9 @@ def create_random_equation():
 
 # function that manages the game with the client
 def thread_for_game(connection, client_name):
-    global continue_game, first_ans, ans
-    print("thread for game")
+    global continue_game, ans, first_ans
     while time.time() < global_timer and continue_game:
             try:
-                print("set connection")
                 connection.settimeout(max(global_timer - time.time(), 0))
                 data = connection.recv(2048)
                 if data:
@@ -104,22 +102,15 @@ def thread_for_game(connection, client_name):
                     continue_game = False 
                     first_ans = client_name 
                     ans = data.decode('utf-8')
-                    print("ans: " + ans + " from user: " + first_ans)
                     l.relese()       
                     break
                    #compare data to the correct ans
-                else: 
-
-                    print("in else")
             except Exception:
-                print("in exception")
                 continue
    
-    #TODO: manage game for each client here
 
 # function for getting the team name from the client
-def threaded_client(connection, client_num, timer_for_connections):
-    print("here only if tcp connection created with client " + str(client_num))
+def threaded_client(connection, client_num, timer_for_connections,index):
     got_team_name = False
     try:
         connection.settimeout(max(timer_for_connections - time.time(), 0))
@@ -130,22 +121,19 @@ def threaded_client(connection, client_num, timer_for_connections):
 
     if got_team_name:
         thread_team_name = data.decode('utf-8')
-        print("here if got name for client " + str(client_num) + " name " + thread_team_name)
 
         l.acquire()
         if client_num == 1:
             global client1_conn, client1_name
             client1_name = thread_team_name
-            print("assign client1_conn")
             client1_conn = connection
         else:
             global client2_conn, client2_name
             client2_name = thread_team_name
             client2_conn = connection
-            print("assign client2_conn")
         l.release()
     else:
-        threaded_client_list.pop(client_num)
+        threaded_client_list.pop(index)
         connection.close()
 
 def accept_connections():
@@ -165,20 +153,16 @@ def accept_connections():
         if not client1:
             client_num = 1
             client1 = True
-            print("client 1 joined")
         elif not client2:
             client_num = 2
             client2 = True
-            print("client2 joined")
         else:
             break
 
         #create thread for each client and start it 
-        t = threading.Thread(target=threaded_client,
-                                args=(conn, client_num, timer_for_connections,))
+        t = threading.Thread(target=threaded_client,args=(conn, client_num, timer_for_connections,client_num,))
         
         threaded_client_list[client_num] = t
-        print("start threaded client")
         t.start()
 
 
@@ -192,7 +176,6 @@ def start_game():
     invite_message = struct.pack('!IbH', magic_cookie, message_type, server_tcp_port) #IbH - big endian\little endian.. format
 
     #thread for connections 
-    print("before accecpt connections thread\n")
     t = threading.Thread(target=accept_connections, args=())
     t.start()
 
@@ -218,8 +201,7 @@ def start_game():
     welcome_message += "\n"
     welcome_message += "==\n"
     welcome_message += "Please answer the following question as fast as you can:\n\n"
-    #print(welcome_message)
-    # end welcome message
+
 
     message_q = create_random_equation()
 
@@ -243,11 +225,6 @@ def start_game():
     client1_threadGame.start()
     client2_threadGame.start()
     
-    # client1_threadGame.join()
-    # client2_threadGame.join()
-
-    time.sleep(game_time)
-
     end_message =  """
            _____       ___       ___  ___   _____  
           /  ___|     /   |     /   |/   | |  ___| 
@@ -261,7 +238,7 @@ def start_game():
           | | | | | | / /   |  __|  |  _  /  
           | |_| | | |/ /    | |___  | | \ \  
           \_____/ |___/     |_____| |_|  \_\
-          """
+          \n"""
 
     end_message += "The correct answer was " + str(result) + "!\n"
     
@@ -276,7 +253,7 @@ def start_game():
             end_message += "Congratulations to the winner: " + client2_name 
         else: 
             end_message += "Congratulations to the winner: " + client1_name
-
+    
 
     try:
         client1_conn.send(end_message.encode('utf-8'))
@@ -284,7 +261,9 @@ def start_game():
     except Exception:
         print("exception")
  
+    # time.sleep(game_time)
 
+    print(end_message)
 
     client1_conn.close()
     client2_conn.close()
