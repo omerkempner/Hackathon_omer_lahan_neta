@@ -13,13 +13,9 @@ game_time = 10
 magic_cookie = 0xabcddcba
 # client_ip = scapy.get_if_addr("eth1")
 client_ip = ''
-print(client_ip)
 
 
 def send_result(client_tcp_socket, time_out):
-    # get_data_thread = threading.Thread(target=get_result, args=(data, time_out))
-    # get_data_thread.start()
-    # print("in send result")
     while time.time() < time_out:
         data  = getch()
         try:
@@ -28,11 +24,6 @@ def send_result(client_tcp_socket, time_out):
             break
         except:  # ConnectionAbortedError | ConnectionResetError:
             break
-
-# def get_result(data, time_out):
-#     while time.time() < time_out:
-#         data  = getch()
-
 
 
 # function for getting message from server after the game starts
@@ -63,15 +54,12 @@ def start():
         print("Client started, listening for offer requests...")
 
         while not in_game:
-            print("recv msg from server")
             try:
                 data, serverAddress = client_udp_socket.recvfrom(7)
             except: 
                 continue 
-            print("after recv msg from server")
             (sent_cookie, msg_type, msg_server_port) = struct.unpack('!IbH', data)
             (ip, port) = serverAddress
-            print("server ip: " + str(ip) + " server port: " + str(port) + " port2: " + str(msg_server_port) )
 
             if sent_cookie == magic_cookie and msg_type == 0x2:
                 print("Received offer from: " + ip + " , attempting to connect... ")
@@ -79,21 +67,18 @@ def start():
                 # accepting offer, sending team name
                 client_tcp_socket = socket(AF_INET, SOCK_STREAM)
                 try:
-                    print("try to connec\n")
                     client_tcp_socket.connect((ip, msg_server_port))
-                    print("send name\n")
                     client_tcp_socket.send(client_name.encode("utf-8"))
                 except:
                     print("Server Disconnected")
                     break
 
                 in_game = True
-                print("in game!\n")
+                print("close udp socket ")
                 client_udp_socket.close()
 
                 try:
                     data = client_tcp_socket.recv(2048)
-                    print("print what the client recived")
                     print(data.decode())
                 except Exception:
                     print("server disconnected")
@@ -111,20 +96,11 @@ def start():
                 
                 send_data_thread.join()
                 get_from_server_thread.join()
-                
-
-                #lahan neta 
-                # send_data_thread = threading.Thread(target=send_result, args=(data, client_tcp_socket, time_out,))
-                
-                # get_from_server_thread = threading.Thread(target=get_from_server, args=(client_tcp_socket,))
-                
-                # send_data_thread.start()
-                # get_from_server_thread.start()
-                # send_data_thread.join()
-                # get_from_server_thread.join()
 
                 client_tcp_socket.close()
 
                 print("Server disconnected, listening for offer requests...")
 
-start()
+while True: 
+    start()
+    
